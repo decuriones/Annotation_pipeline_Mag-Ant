@@ -60,7 +60,14 @@ def Merging(geNomad_df, viral_verify_df, strain_ID):
     copy_geNomad_df, copy_viral_verify_df = copy_geNomad_df[List_col_geNomad], copy_viral_verify_df[List_col_viral_verify]
 
     # Merge the geNomad summary with the viral_verify summary on 'Contig_ID'
-    merged_df = pa.merge(copy_geNomad_df, copy_viral_verify_df, on='Contig_ID', how='left', suffixes=('_geNomad', '_viral_verify'))
+    merged_df = pa.merge(copy_geNomad_df, copy_viral_verify_df, on='Contig_ID', how='outer', suffixes=('_geNomad', '_viral_verify'))
+    
+    # Reorder columns and include classification for relevant dataframes
+    first_cols = ['Contig_ID','topology']
+    if 'classification' in merged_df.columns:
+        first_cols += ['classification']
+
+    merged_df=merged_df[['Contig_ID','topology'] + [col for col in merged_df.columns if col != 'Contig_ID']]
     
     # Fill NaN values in 'Viral_Verification' with 'Not Verified'
     if 'Viral_Verification' in merged_df.columns:

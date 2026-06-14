@@ -47,17 +47,10 @@ def findEmlbFile(directory) {
 workflow Annotation_pipeline {
     
     take:
-    seq_input
+    seq_with_name
+    
 
     main:
-    seq_input = params.seq_list instanceof String ? params.seq_list.replaceAll(/^\[|\]$/, '').split(/\s*,\s*/).findAll { it } : params.seq_list
-    println "annotation_tool = ${params.annotation_tool}"
-
-    
-    seq_ch = Channel.fromPath(seq_input)
-                      .flatten()
-                      .view { seq -> "Input sequences: $seq" }
-    seq_with_name = seq_ch.map { seq -> tuple(seq.simpleName, seq) }
     
     // Check if the taxonomy file is provided, if yes, run the taxonomy comparison and check
     if (params.tax_gtdb != '') {

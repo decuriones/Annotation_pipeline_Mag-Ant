@@ -13,11 +13,10 @@ include { Merging_summaries } from '/lustre06/project/6066427/elouanln/Sandbox/C
  * Pipeline 
  */
 
-workflow Viral_and_plamsid_check {
-    take:
-    seq_input = params.seq_list instanceof String ? params.seq_list.replaceAll(/^\[|\]$/, '').split(/\s*,\s*/).findAll { it } : params.seq_list
+workflow {
 
     main:
+    seq_input = params.seq_list instanceof String ? params.seq_list.replaceAll(/^\[|\]$/, '').split(/\s*,\s*/).findAll { it } : params.seq_list
     
     seq_ch = Channel.fromPath(seq_input)
                       .flatten()

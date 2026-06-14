@@ -1,5 +1,6 @@
 include { Viral_and_plamsid_check } from './Plasmids_Viral_check/Viral_and_plamsid_check.nf'
 include { Annotation_pipeline } from './Annotation/Annotation_pipeline.nf'
+include { Quality_control } from './Quality_control/Quality_control.nf'
 // include validation module here when it will be ready
 
 Workflow {
@@ -14,11 +15,23 @@ Workflow {
     ║   Annotation_tool: ${params.annotation_tool}       ║
     ║   Viral_Verify: ${params.viral_verify}             ║
     ║   Antismash: ${params.antismash}                   ║
+    ║   *********: ${params.antismash}                   ║
+    ║   *********: ${params.antismash}                   ║
     ╚════════════════════════════════════════════════════╝
         """
     // Modify the seq list to readable format for the pipeline
     seq_input = params.seq_list instanceof String ? params.seq_list.replaceAll(/^\[|\]$/, '').split(/\s*,\s*/).findAll { it } : params.seq_list
     
+    seq_ch = Channel.fromPath(seq_input)
+                      .flatten()
+                      .map { seq -> tuple(seq.simpleName, seq) }
+                      .view { seq_name, seq -> "Input sequences: $seq_name -> $seq" }
+    
+    seq_ch = Channel.fromPath(seq_input)
+                      .flatten()
+                      .view { seq -> "Input sequences: $seq" }
+    seq_with_name = seq_ch.map { seq -> tuple(seq.simpleName, seq) }
+
     annotation_step = Annotation_pipeline (
         seq_input: seq_input
     )
@@ -26,6 +39,9 @@ Workflow {
     viral_check = Viral_and_plamsid_check (
         seq_input: seq_input
     )
+
+
+
     
     
     publish:
