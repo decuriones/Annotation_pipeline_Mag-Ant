@@ -35,7 +35,7 @@ process Antismash_annotation {
     # Antismash execution
     apptainer exec --env PYTHONNOUSERSITE=1 --overlay "$SCRATCH/apptainer_overlays/antismash_${project}_${seq_name}_rw.img" /home/elouanln/projects/def-jcomte/software/singularity_images/antismash_galaxy/antismash_v8-0-4.sif antismash \
     --output-dir ./"${seq_name}_antismash_out_${project}" \
-    --genefinding-tool pyrodigal \
+    --genefinding-tool prodigal \
     --databases /home/elouanln/scratch/antismash_db/db/ \
     --cc-mibig --cb-knownclusters --smcog-trees \
     \$nucl_seq

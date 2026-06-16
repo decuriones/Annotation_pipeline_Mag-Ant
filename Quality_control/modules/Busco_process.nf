@@ -46,7 +46,12 @@ process Busco_process {
 
     fi
     
-    busco --offline --in ${protein_fasta} --out Busco_output_${seq_name} --lineage_dataset ${DB_path} --mode protein --download_path /home/elouanln/Busco/Busco_db
+    busco --offline \
+    --in ${protein_fasta} \
+    --out Busco_output_${seq_name} \
+    --lineage_dataset ${DB_path} \
+    --mode protein \
+    --download_path /home/elouanln/Busco/Busco_db
 
 
     '''

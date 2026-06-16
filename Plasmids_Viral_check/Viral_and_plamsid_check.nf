@@ -19,10 +19,9 @@ workflow Viral_and_plamsid_check {
     seq_input
 
     main:
-    seq_ch = Channel.fromPath(seq_input)
-                      .flatten()
-                      .map { seq -> tuple(seq.simpleName, seq) }
-                      .view { seq_name, seq -> "Input sequences: $seq_name -> $seq" }
+    // Taking general input to readable input for the pipeline and printing its content
+    seq_ch = seq_input
+                      .view { seq -> "Input sequences for viral and plasmid check: $seq" }
     
     GeNOMAD_process(seq_ch, params.project) 
     if (params.viral_verify) {

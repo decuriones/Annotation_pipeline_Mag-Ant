@@ -35,12 +35,12 @@ def Merging(geNomad_df, viral_verify_df, strain_ID):
 
     if 'virus_score' in copy_geNomad_df.columns:
         copy_viral_verify_df = copy_viral_verify_df.loc[
-            copy_viral_verify_df['classification'].astype(str).str.lower().contains(['virus', 'provirus']), :
+            copy_viral_verify_df['classification'].astype(str).str.lower().str.contains('virus|provirus'), :
         ]
         type_seq = "viral"
     elif 'plasmid_score' in copy_geNomad_df.columns:
         copy_viral_verify_df = copy_viral_verify_df.loc[
-            copy_viral_verify_df['classification'].astype(str).str.lower().contains(['plasmid', 'chromosome']), :
+            copy_viral_verify_df['classification'].astype(str).str.lower().str.contains('plasmid|chromosome'), :
         ]
         type_seq = "plasmid"
     
@@ -54,7 +54,7 @@ def Merging(geNomad_df, viral_verify_df, strain_ID):
 
     # to keep in genomad : contig id, topology, length, coordinates, n genes , scores, hallmarks & marker enrichment
     # to keep in viral verify : contig id, classif & prob depending on the classif
-    List_col_geNomad = [col for col in copy_geNomad_df.columns if col in ['Contig_ID','length', 'topology', 'coordinates', 'n_genes', 'plasmid_score', 'virus_score', 'n_hallmarks', 'marker_enrichment']]
+    List_col_geNomad = [col for col in copy_geNomad_df.columns if col in ['Contig_ID','length', 'topology', 'coordinates', 'n_genes', 'plasmid_score', 'virus_score', 'n_hallmarks', 'marker_enrichment'] and col != 'taxonomy']
     List_col_viral_verify = ['Contig_ID', 'classification'] + [col for col in copy_viral_verify_df.columns if col not in ['Contig_ID', 'contig_name', 'classification', 'protein_domains', 'taxonomy'] and type_seq in col.lower()]
 
     copy_geNomad_df, copy_viral_verify_df = copy_geNomad_df[List_col_geNomad], copy_viral_verify_df[List_col_viral_verify]

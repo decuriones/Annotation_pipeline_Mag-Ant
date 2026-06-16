@@ -1,49 +1,79 @@
 include { Viral_and_plamsid_check } from './Plasmids_Viral_check/Viral_and_plamsid_check.nf'
 include { Annotation_pipeline } from './Annotation/Annotation_pipeline.nf'
-include { Quality_control } from './Quality_control/Quality_control.nf'
+//include { Quality_control } from './Quality_control/Quality_control.nf'
 // include validation module here when it will be ready
 
-Workflow {
+/*
+ * Function definition 
+ */
+def counting_caracter = { str ->
+    def string = str.toString()
+    println ('${string}')
+    return string.length()}
 
-    log.info """
+def adding_spaces = { str, nb_spaces ->
+    return str + ' ' * nb_spaces
+}
+
+def formating_info = { info, other_caract, total_length ->
+    if (info.length() >= total_length) {
+        return "${info.substring(0, total_length - 5)}...  "
+    }
+    def spaces_needed = total_length - (counting_caracter(info)+counting_caracter(other_caract))
+    def formatted_info = adding_spaces(info, spaces_needed)+'║'
+    return formatted_info
+}
+/*
+ * Pipeline definition 
+ */
+
+workflow {
+
+    log.info $/
+
+  __  __                                 _   
+ |  \/  |                    /\         | |  
+ | \  / | __ _  __ _ ______ /  \   _ __ | |_ 
+ | |\/| |/ _` |/ _` |______/ /\ \ | '_ \| __|
+ | |  | | (_| | (_| |     / ____ \| | | | |_ 
+ |_|  |_|\__,_|\__, |    /_/    \_\_| |_|\__|
+                __/ |                        
+               |___/                         
+
+/$
+
+log.info """
     ╔════════════════════════════════════════════════════╗
     ║   # Input summary                                  ║
-    ║   Pipeline: ${params.project_name}                 ║
-    ║   Input: ${params.seq_list}                        ║
+    ║   Project: ${formating_info("${params.project}", counting_caracter("   Project: "), counting_caracter("   # Input summary                                  "))}
+    ║   Input: ${formating_info("${params.seq_list}", counting_caracter("   Input: "), counting_caracter("   # Input summary                                  "))}
     ║                                                    ║
     ║   # Tools exectued                                 ║
-    ║   Annotation_tool: ${params.annotation_tool}       ║
-    ║   Viral_Verify: ${params.viral_verify}             ║
-    ║   Antismash: ${params.antismash}                   ║
-    ║   *********: ${params.antismash}                   ║
-    ║   *********: ${params.antismash}                   ║
+    ║   Annotation_tool: ${formating_info("${params.annotation_tool}", counting_caracter("   Annotation_tool: "), counting_caracter("   # Tools exectued                                 "))}
+    ║   Viral_Verify: ${formating_info("${params.viral_verify}", counting_caracter("   Viral_Verify: "), counting_caracter("   # Tools exectued                                 "))}
+    ║   Antismash: ${formating_info("${params.antismash}", counting_caracter("   Antismash: "), counting_caracter("   # Tools exectued                                 "))}
+    ║   Busco: ${formating_info("${params.busco}", counting_caracter("   Busco: "), counting_caracter("   # Tools exectued                                 "))}
     ╚════════════════════════════════════════════════════╝
         """
+
+    main:
     // Modify the seq list to readable format for the pipeline
     seq_input = params.seq_list instanceof String ? params.seq_list.replaceAll(/^\[|\]$/, '').split(/\s*,\s*/).findAll { it } : params.seq_list
     
-    seq_ch = Channel.fromPath(seq_input)
-                      .flatten()
-                      .map { seq -> tuple(seq.simpleName, seq) }
-                      .view { seq_name, seq -> "Input sequences: $seq_name -> $seq" }
+    seq_with_name = Channel.fromPath(seq_input)
+                    .flatten()
+                    .map { seq -> tuple(seq.simpleName, seq) }
+                    .view { seq -> "channeled sequences: $seq" }                  
     
-    seq_ch = Channel.fromPath(seq_input)
-                      .flatten()
-                      .view { seq -> "Input sequences: $seq" }
-    seq_with_name = seq_ch.map { seq -> tuple(seq.simpleName, seq) }
-
+    // input similar for both pipelines, channel of tuples (seq_name, seq_path)
     annotation_step = Annotation_pipeline (
-        seq_input: seq_input
+        seq_with_name
     )
 
     viral_check = Viral_and_plamsid_check (
-        seq_input: seq_input
+        seq_with_name
     )
 
-
-
-    
-    
     publish:
     // Annotation output
     Annotation = annotation_step.Annotation

@@ -47,16 +47,19 @@ def findEmlbFile(directory) {
 workflow Annotation_pipeline {
     
     take:
-    seq_with_name
+    seq_input
     
 
     main:
-    
+    // Taking general input to readable input for the pipeline and printing its content
+    seq_with_name = seq_input
+                      .view { seq -> "Input sequences in annotation : $seq" }
+
     // Check if the taxonomy file is provided, if yes, run the taxonomy comparison and check
     if (params.tax_gtdb != '') {
         tax_gtdb = Channel.fromPath(params.tax_gtdb)
                         .view { tax -> "Taxonomy GTDB file: $tax" }
-        seq_tax_gtdb = seq_ch.combine(tax_gtdb)
+        seq_tax_gtdb = seq_with_name.combine(tax_gtdb)
                         .view { combined -> "total input: $combined " }
                         .multiMap{ it ->
                             seq : it[0]
@@ -77,8 +80,6 @@ workflow Annotation_pipeline {
                     .map { row -> 
                     tuple(row[0].replaceFirst(/\.fa(sta)?$/, ''), row[1])  // (nom_séquence, genus)
                     }
-                    //.collect() // Collect the results into a list
-                    //.map{ genus -> genus[1]} // getting the right column with the genus name
                     .view{ genus -> "Extracted genus: $genus" }
 
         // Collect taxonomy results
@@ -125,8 +126,7 @@ workflow Annotation_pipeline {
 
         } else if (params.annotation_tool == 'Bakta') {
             // Bakta annotation
-            Bakta_annotation(seq_with_name
-                            .map { it[1] } // Get the sequence path for Bakta input
+            Bakta_annotation(seq_with_name // Get the sequence path for Bakta input
                             , "" // No genus information
                             , params.project)
         }
@@ -139,17 +139,20 @@ workflow Annotation_pipeline {
     } else if (params.annotation_tool == 'Bakta') {
         annotation_out = Bakta_annotation.out
     }
+
     if (params.antismash) {
         gff_file = annotation_out
                             .map { seq_name, annotation_dir -> findGff3File(annotation_dir) } // Get the gff3 file path for Antismash input
+                            .view { gff -> "GFF3 file for Antismash input: $gff" }
         nucleotide_file = annotation_out.map { seq_name, annotation_dir -> findEmlbFile(annotation_dir) } // Get the sequence path for Antismash input
+                                        .view { nucleotide -> "Nucleotide file for Antismash input: $nucleotide" }
         Antismash_annotation(seq_with_name
-                            .map { it[1] } // Get the sequence path for Antismash input
+                            .map { it[0] } // Get the sequence name for Antismash input
                             , nucleotide_file
                             , gff_file
                             , params.project)
     }
-
+    
     emit:
     Annotation = annotation_out
     Taxonomy = Taxonomy_collection

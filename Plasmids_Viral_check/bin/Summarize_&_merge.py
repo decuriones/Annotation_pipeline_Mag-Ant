@@ -31,16 +31,16 @@ def Merging(geNomad_df, viral_verify_df, strain_ID):
 
     # Copying the dataframes to avoid modifying the original ones
     copy_geNomad_df, copy_viral_verify_df = geNomad_df.copy(), viral_verify_df.copy()
-    # Masking values according to geNomad input, keeping only viruses if considering virus summary and chromosomal and plasmidic sequences else
 
+    # Masking values according to geNomad input, keeping only viruses if considering virus summary and chromosomal and plasmidic sequences else 
     if 'virus_score' in copy_geNomad_df.columns:
         copy_viral_verify_df = copy_viral_verify_df.loc[
-            copy_viral_verify_df['classification'].astype(str).str.lower().str.contains(r'virus|provirus'), :
+            copy_viral_verify_df['classification'].astype(str).str.lower().contains('virus|provirus'), :
         ]
         type_seq = "viral"
     elif 'plasmid_score' in copy_geNomad_df.columns:
         copy_viral_verify_df = copy_viral_verify_df.loc[
-            copy_viral_verify_df['classification'].astype(str).str.lower().str.contains(r'plasmid|chromosome'), :
+            copy_viral_verify_df['classification'].astype(str).str.lower().contains('plasmid|chromosome'), :
         ]
         type_seq = "plasmid"
     
@@ -54,13 +54,20 @@ def Merging(geNomad_df, viral_verify_df, strain_ID):
 
     # to keep in genomad : contig id, topology, length, coordinates, n genes , scores, hallmarks & marker enrichment
     # to keep in viral verify : contig id, classif & prob depending on the classif
-    List_col_geNomad = [col for col in copy_geNomad_df.columns if col in ['Contig_ID','length', 'topology', 'coordinates', 'n_genes', 'plasmid_score', 'virus_score', 'n_hallmarks', 'marker_enrichment']]
+    List_col_geNomad = [col for col in copy_geNomad_df.columns if col in ['Contig_ID','length', 'topology', 'coordinates', 'n_genes', 'plasmid_score', 'virus_score', 'n_hallmarks', 'marker_enrichment'] and col != 'taxonomy']
     List_col_viral_verify = ['Contig_ID', 'classification'] + [col for col in copy_viral_verify_df.columns if col not in ['Contig_ID', 'contig_name', 'classification', 'protein_domains', 'taxonomy'] and type_seq in col.lower()]
 
     copy_geNomad_df, copy_viral_verify_df = copy_geNomad_df[List_col_geNomad], copy_viral_verify_df[List_col_viral_verify]
 
     # Merge the geNomad summary with the viral_verify summary on 'Contig_ID'
-    merged_df = pa.merge(copy_geNomad_df, copy_viral_verify_df, on='Contig_ID', how='left', suffixes=('_geNomad', '_viral_verify'))
+    merged_df = pa.merge(copy_geNomad_df, copy_viral_verify_df, on='Contig_ID', how='outer', suffixes=('_geNomad', '_viral_verify'))
+    
+    # Reorder columns and include classification for relevant dataframes
+    first_cols = ['Contig_ID','topology']
+    if 'classification' in merged_df.columns:
+        first_cols += ['classification']
+
+    merged_df=merged_df[['Contig_ID','topology'] + [col for col in merged_df.columns if col != 'Contig_ID']]
     
     # Fill NaN values in 'Viral_Verification' with 'Not Verified'
     if 'Viral_Verification' in merged_df.columns:
