@@ -5,7 +5,7 @@ Usage :
 
  * Profil choice = standard, pgap or bakta, the default profile advised is bakta as it is the default annotation tool (and the only one working as for now)
 
-Arguments :
+Arguments (=default value):
     
     // Path to the fasta sequences in an array format
     seq_list = []
