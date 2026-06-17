@@ -35,12 +35,12 @@ def Merging(geNomad_df, viral_verify_df, strain_ID):
     # Masking values according to geNomad input, keeping only viruses if considering virus summary and chromosomal and plasmidic sequences else 
     if 'virus_score' in copy_geNomad_df.columns:
         copy_viral_verify_df = copy_viral_verify_df.loc[
-            copy_viral_verify_df['classification'].astype(str).str.lower().contains('virus|provirus'), :
+            copy_viral_verify_df['classification'].astype(str).str.lower().str.contains('virus|provirus', regex=True, na=False), :
         ]
         type_seq = "viral"
     elif 'plasmid_score' in copy_geNomad_df.columns:
         copy_viral_verify_df = copy_viral_verify_df.loc[
-            copy_viral_verify_df['classification'].astype(str).str.lower().contains('plasmid|chromosome'), :
+            copy_viral_verify_df['classification'].astype(str).str.lower().str.contains('plasmid|chromosome', regex=True, na=False), :
         ]
         type_seq = "plasmid"
     

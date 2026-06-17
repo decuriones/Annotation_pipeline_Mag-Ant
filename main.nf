@@ -7,9 +7,8 @@ include { Annotation_pipeline } from './Annotation/Annotation_pipeline.nf'
  * Function definition 
  */
 def counting_caracter = { str ->
-    def string = str.toString()
-    println ('${string}')
-    return string.length()}
+    str.toString().length()
+    }
 
 def adding_spaces = { str, nb_spaces ->
     return str + ' ' * nb_spaces
@@ -17,7 +16,7 @@ def adding_spaces = { str, nb_spaces ->
 
 def formating_info = { info, other_caract, total_length ->
     if (info.length() >= total_length) {
-        return "${info.substring(0, total_length - 5)}...  "
+        return "${info.substring(0, total_length - (5+counting_caracter(other_caract)))}...  ║"
     }
     def spaces_needed = total_length - (counting_caracter(info)+counting_caracter(other_caract))
     def formatted_info = adding_spaces(info, spaces_needed)+'║'
@@ -29,8 +28,7 @@ def formating_info = { info, other_caract, total_length ->
 
 workflow {
 
-    log.info $/
-
+    log.info ($/"""
   __  __                                 _   
  |  \/  |                    /\         | |  
  | \  / | __ _  __ _ ______ /  \   _ __ | |_ 
@@ -39,22 +37,21 @@ workflow {
  |_|  |_|\__,_|\__, |    /_/    \_\_| |_|\__|
                 __/ |                        
                |___/                         
+"""/$)   
 
-/$
-
-log.info """
+log.info ("""
     ╔════════════════════════════════════════════════════╗
     ║   # Input summary                                  ║
-    ║   Project: ${formating_info("${params.project}", counting_caracter("   Project: "), counting_caracter("   # Input summary                                  "))}
-    ║   Input: ${formating_info("${params.seq_list}", counting_caracter("   Input: "), counting_caracter("   # Input summary                                  "))}
+    ║   Project: ${formating_info("${params.project}", "   Project: ", 52)}
+    ║   Input: ${formating_info("${params.seq_list}", "   Input: ", 52)}
     ║                                                    ║
     ║   # Tools exectued                                 ║
-    ║   Annotation_tool: ${formating_info("${params.annotation_tool}", counting_caracter("   Annotation_tool: "), counting_caracter("   # Tools exectued                                 "))}
-    ║   Viral_Verify: ${formating_info("${params.viral_verify}", counting_caracter("   Viral_Verify: "), counting_caracter("   # Tools exectued                                 "))}
-    ║   Antismash: ${formating_info("${params.antismash}", counting_caracter("   Antismash: "), counting_caracter("   # Tools exectued                                 "))}
-    ║   Busco: ${formating_info("${params.busco}", counting_caracter("   Busco: "), counting_caracter("   # Tools exectued                                 "))}
+    ║   Annotation_tool: ${formating_info("${params.annotation_tool}", "   Annotation_tool: ", 52)}
+    ║   Viral_Verify: ${formating_info("${params.viral_verify}", "   Viral_Verify: ", 52)}
+    ║   Antismash: ${formating_info("${params.antismash}", "   Antismash: ", 52)}
+    ║   Busco: ${formating_info("${params.busco}", "   Busco: ", 52)}
     ╚════════════════════════════════════════════════════╝
-        """
+     """)
 
     main:
     // Modify the seq list to readable format for the pipeline
@@ -74,6 +71,16 @@ log.info """
         seq_with_name
     )
 
+    // if (params.busco) {
+    //     quality_report = Quality_control (
+    //         ///to define
+    //     )
+    // }
+    // else {
+    //     log.info "Busco annotation and quality control steps are skipped as busco parameter is set to false."
+    //     quality_report = Channel.empty()
+    // }
+
     publish:
     // Annotation output
     Annotation = annotation_step.Annotation
@@ -83,6 +90,9 @@ log.info """
     // Viral check and geNomad output
     Collection_results = viral_check.Collection_results
     Summary_tables = viral_check.Summary_tables
+
+    // // Quality control output
+    // Quality_control_report = quality_report
 }
 
 output {
@@ -106,5 +116,9 @@ output {
         path "Output/Secondary_metabolites_${params.project}"
         mode "copy"
     }
+    // Quality_control_report {
+    //     path "Output/Quality_control_${params.project}"
+    //     mode "copy"
+    // }
 
 }
