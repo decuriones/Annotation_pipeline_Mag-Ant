@@ -20,7 +20,12 @@ include {Busco_process} from './modules/Busco_process.nf'
 workflow {
     
     main:
-    Busco_process(params.busco_lineage,params.protein_fasta, params.seq_name)
+    seq_name = params.seq_name
+    protein_fasta = params.protein_fasta
+    busco_lineage = params.busco_lineage
+
+    println("${seq_name}, ${protein_fasta}, ${busco_lineage}")
+    Busco_process(busco_lineage, protein_fasta, seq_name)
 
     publish:
     quality_report = Busco_process.out

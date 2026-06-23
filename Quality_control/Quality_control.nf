@@ -4,7 +4,7 @@
  * Import modules required for the pipeline
  */
  
-include {Busco_process} from ./modules/Busco_process.nf
+include {Busco_process} from "./modules/Busco_process.nf"
 
 
 /*
@@ -20,12 +20,13 @@ include {Busco_process} from ./modules/Busco_process.nf
 workflow Quality_control {
     
     take:
+    lineage_db
     protein_fasta
     seq_name
 
     main:
-    Busco_process(protein_fasta, seq_name)
+    Busco_process(lineage_db, protein_fasta, seq_name)
 
     emit:
-    ${seq_name}_quality_control_report = Busco_process.out
+    quality_report = Busco_process.out
 }

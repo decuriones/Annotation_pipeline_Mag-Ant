@@ -1,6 +1,6 @@
 include { Viral_and_plamsid_check } from './Plasmids_Viral_check/Viral_and_plamsid_check.nf'
 include { Annotation_pipeline } from './Annotation/Annotation_pipeline.nf'
-//include { Quality_control } from './Quality_control/Quality_control.nf'
+include { Quality_control } from './Quality_control/Quality_control.nf'
 // include validation module here when it will be ready
 
 /*
@@ -50,6 +50,10 @@ log.info ("""
     ║   Viral_Verify: ${formating_info("${params.viral_verify}", "   Viral_Verify: ", 52)}
     ║   Antismash: ${formating_info("${params.antismash}", "   Antismash: ", 52)}
     ║   Busco: ${formating_info("${params.busco}", "   Busco: ", 52)}
+    ║                                                    ║
+    ║   # Taxonomy                                       ║    
+    ║   Taxonomy: ${formating_info("${params.tax_gtdb}", "   Taxonomy: ", 52)}
+    ║   Lineage_db: ${formating_info("${params.busco}", "   Lineage_db: ", 52)}
     ╚════════════════════════════════════════════════════╝
      """)
 
@@ -71,15 +75,26 @@ log.info ("""
         seq_with_name
     )
 
-    // if (params.busco) {
-    //     quality_report = Quality_control (
-    //         ///to define
-    //     )
-    // }
-    // else {
-    //     log.info "Busco annotation and quality control steps are skipped as busco parameter is set to false."
-    //     quality_report = Channel.empty()
-    // }
+    // Extracting .faa files from the annotation output
+    seq_name = annotation_step.Annotation
+                    .map { annotation_file -> annotation_file[0] }
+                    .view { seq_name -> "sequence name for quality control: $seq_name" }
+    protein_fasta = annotation_step.Annotation
+                    .view { annotation_file -> "annotation file for quality control: $annotation_file" }
+                    .map { seq_name, annotation_file -> "${annotation_file}/${seq_name}.faa" }
+                    .view { protein_fasta -> "protein fasta for quality control: $protein_fasta" }
+
+    if (params.busco) {
+        quality_report = Quality_control (
+            params.busco_lineage,
+            protein_fasta,
+            seq_name
+        )
+    }
+    else {
+        log.info "Busco annotation and quality control steps are skipped as busco parameter is set to false."
+        quality_report = Channel.empty()
+    }
 
     publish:
     // Annotation output
@@ -91,8 +106,8 @@ log.info ("""
     Collection_results = viral_check.Collection_results
     Summary_tables = viral_check.Summary_tables
 
-    // // Quality control output
-    // Quality_control_report = quality_report
+    // Quality control output
+    Quality_control_report = quality_report
 }
 
 output {
@@ -116,9 +131,9 @@ output {
         path "Output/Secondary_metabolites_${params.project}"
         mode "copy"
     }
-    // Quality_control_report {
-    //     path "Output/Quality_control_${params.project}"
-    //     mode "copy"
-    // }
+    Quality_control_report {
+        path "Output/Quality_control_${params.project}"
+        mode "copy"
+    }
 
 }
