@@ -7,8 +7,8 @@ Usage :
 
 Arguments (=default value):
     
-    // Path to the fasta sequences in an array format
-    seq_list = []
+    // Path to the fasta sequences distributed line by line in txt List
+    seq_list = path_to_List.txt
     
     // Path to metadata file containing the genus information for PGAP annotation
     tax_gtdb = ''
