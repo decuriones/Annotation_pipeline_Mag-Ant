@@ -141,16 +141,15 @@ workflow Annotation_pipeline {
     }
 
     if (params.antismash) {
-        gff_file = annotation_out
-                            .map { seq_name, annotation_dir -> findGff3File(annotation_dir) } // Get the gff3 file path for Antismash input
-                            .view { gff -> "GFF3 file for Antismash input: $gff" }
-        nucleotide_file = annotation_out.map { seq_name, annotation_dir -> findEmlbFile(annotation_dir) } // Get the sequence path for Antismash input
-                                        .view { nucleotide -> "Nucleotide file for Antismash input: $nucleotide" }
-        Antismash_annotation(seq_with_name
-                            .map { it[0] } // Get the sequence name for Antismash input
-                            , nucleotide_file
-                            , gff_file
-                            , params.project)
+    antismash_input = annotation_out
+        .map { seq_name, annotation_dir ->
+            tuple(seq_name,
+                  findEmlbFile(annotation_dir),
+                  findGff3File(annotation_dir))
+        }
+        .view { name, gbk, gff -> "Antismash input: $name | $gbk | $gff" }
+
+    Antismash_annotation(antismash_input, params.project)
     }
     
     emit:

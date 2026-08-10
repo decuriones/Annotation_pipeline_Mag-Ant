@@ -40,9 +40,10 @@ workflow Viral_and_plamsid_check {
         .join(GeNomad_summary_viruses, by: 0)
         .join(Viral_verify_summary, by: 0)
 
-
+    viral_grouped = Viral_verify_process.out.groupTuple()   // tuple(seq_name, [6 fichiers])
+       
     emit:
-    Collection_results = GeNOMAD_process.out.combine(Viral_verify_process.out)
+    Collection_results = GeNOMAD_process.out.join(viral_grouped, remainder: true)
     Summary_tables = Merging_summaries(Merged_summaries, params.project)
     
 }

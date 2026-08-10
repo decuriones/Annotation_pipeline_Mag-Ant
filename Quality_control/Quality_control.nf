@@ -21,11 +21,10 @@ workflow Quality_control {
     
     take:
     lineage_db
-    protein_fasta
-    seq_name
+    busco_input          // tuple(seq_name, protein_fasta)
 
     main:
-    Busco_process(lineage_db, protein_fasta, seq_name)
+    Busco_process(lineage_db, busco_input)
 
     emit:
     quality_report = Busco_process.out

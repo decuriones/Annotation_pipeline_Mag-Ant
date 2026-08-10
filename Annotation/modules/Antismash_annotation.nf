@@ -6,12 +6,10 @@
 
 process Antismash_annotation {
 
-    //errorStrategy 'ignore'
+    errorStrategy 'ignore'
 
     input:
-    val(seq_name)
-    path(nucleotide_file)
-    path(gff3_file)
+    tuple val(seq_name), path(nucleotide_file), path(gff3_file)
     val project
 
     output:

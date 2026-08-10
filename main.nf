@@ -59,7 +59,7 @@ log.info ("""
 
     main:
     // Modify the seq list to readable format for the pipeline
-    seq_input = params.seq_list instanceof String ? params.seq_list.replaceAll(/^\[|\]$/, '').split(/\s*,\s*/).findAll { it } : params.seq_list
+    seq_input = file(params.seq_list).readLines().findAll { it.trim() }
     
     seq_with_name = Channel.fromPath(seq_input)
                     .flatten()
@@ -75,26 +75,18 @@ log.info ("""
         seq_with_name
     )
 
-    // Extracting .faa files from the annotation output
-    seq_name = annotation_step.Annotation
-                    .map { annotation_file -> annotation_file[0] }
-                    .view { seq_name -> "sequence name for quality control: $seq_name" }
-    protein_fasta = annotation_step.Annotation
-                    .view { annotation_file -> "annotation file for quality control: $annotation_file" }
-                    .map { seq_name, annotation_file -> "${annotation_file}/${seq_name}.faa" }
-                    .view { protein_fasta -> "protein fasta for quality control: $protein_fasta" }
-
+    // Extracting .faa and seq files from the annotation output then starting quality control
     if (params.busco) {
-        quality_report = Quality_control (
-            params.busco_lineage,
-            protein_fasta,
-            seq_name
-        )
+    busco_input = annotation_step.Annotation
+                      .map { seq_name, annotation_dir ->
+                          tuple(seq_name, file("${annotation_dir}/${seq_name}.faa"))
+                      }
+    quality_report = Quality_control(params.busco_lineage, busco_input)
     }
     else {
-        log.info "Busco annotation and quality control steps are skipped as busco parameter is set to false."
+        log.info "Busco annotation and quality control steps are skipped..."
         quality_report = Channel.empty()
-    }
+    }   
 
     publish:
     // Annotation output
@@ -103,7 +95,7 @@ log.info ("""
     Secondary_metabolites = annotation_step.Secondary_metabolites
 
     // Viral check and geNomad output
-    Collection_results = viral_check.Collection_results
+    Collection_results = viral_check.Collection_results.view { collection_results -> "collection results for viral check: $collection_results" }
     Summary_tables = viral_check.Summary_tables
 
     // Quality control output
@@ -112,27 +104,27 @@ log.info ("""
 
 output {
     Collection_results {
-        path "Output/${params.project}_collection_results.tsv"
+        path "${params.project}_collection_results"
         mode "copy"
     }
     Summary_tables {
-        path "Output/${params.project}_summary_tables"
+        path "${params.project}_summary_tables"
         mode "copy"
     }
     Taxonomy {
-        path "Output/Taxonomy"
+        path "Taxonomy"
         mode "copy"
     }
     Annotation {
-        path "Output/Annotation_${params.project}/${params.annotation_tool}_annotation_${params.project}"
+        path "Annotation_${params.project}/${params.annotation_tool}_annotation_${params.project}"
         mode "copy"
     }
     Secondary_metabolites {
-        path "Output/Secondary_metabolites_${params.project}"
+        path "Secondary_metabolites_${params.project}"
         mode "copy"
     }
     Quality_control_report {
-        path "Output/Quality_control_${params.project}"
+        path "Quality_control_${params.project}"
         mode "copy"
     }
 

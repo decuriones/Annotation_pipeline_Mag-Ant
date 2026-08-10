@@ -9,8 +9,7 @@ process Busco_process {
 
     input:
     val busco_lineage
-    val protein_fasta
-    val seq_name
+    tuple val(seq_name), path(protein_fasta)
 
     output:
     path "Busco_output_${seq_name}" 

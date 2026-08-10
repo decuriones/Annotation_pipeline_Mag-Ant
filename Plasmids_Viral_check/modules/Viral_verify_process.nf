@@ -19,6 +19,7 @@ process Viral_verify_process {
     source /home/elouanln/scratch/Sandbox/Test_ground/Test_viral_verify/VENV_viral_verify/bin/activate
     viral_verify -i ${seq} \
     -o ./"${seq_name}_viral_verified_${project}" \
-    -H /home/elouanln/scratch/Pfam_db_v38.1_hmm/Pfam-A.hmm     
+    -H /home/elouanln/scratch/Pfam_db_v38.1_hmm/Pfam-A.hmm \
+    -t ${task.cpus}    
     """
 }

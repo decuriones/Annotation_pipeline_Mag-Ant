@@ -43,6 +43,12 @@ def Merging(geNomad_df, viral_verify_df, strain_ID):
             copy_viral_verify_df['classification'].astype(str).str.lower().str.contains('plasmid|chromosome', regex=True, na=False), :
         ]
         type_seq = "plasmid"
+
+    # initializing a new column for the strain ID in both dataframes
+    copy_geNomad_df['Virus_completeness'] = pa.Series(
+    pa.NA, index=copy_geNomad_df.index, dtype='object'
+    )
+    
     
     # Creating col with stable contig id and new col for genomad complete viruses and plasmids
     copy_geNomad_df['Contig_ID'] = copy_geNomad_df['seq_name'].astype(str).str.split('|').str[0].str.replace("_polypolish", "", regex=False).str.replace("_polish", "", regex=False)

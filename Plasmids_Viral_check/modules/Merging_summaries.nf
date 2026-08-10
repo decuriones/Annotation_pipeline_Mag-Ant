@@ -16,12 +16,12 @@ process Merging_summaries {
     script:
     """
     module load python
-    source /home/elouanln/scratch/Sandbox/VenV/bin/activate
+    source /home/elouanln/scratch/Sandbox/VENV/bin/activate
     python "/home/elouanln/projects/def-jcomte/elouanln/Sandbox/Code/Annotation/Complete_pipeline/Plasmids_Viral_check/bin/Summarize_&_merge.py" \
     --geNomad_v ${geNomad_summary_viruses} \
     --geNomad_p ${geNomad_summary_plasmids} \
     --viral_verify ${viral_verify_summary} \
-    --out_v ./"viruses_summary_${project}.csv" \
-    --out_p ./"plasmid_summary_${project}.csv" \
+    --out_v ./"${seq_name}_viruses_summary_${project}.csv" \
+    --out_p ./"${seq_name}_plasmid_summary_${project}.csv" \
     """
 }
